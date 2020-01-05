@@ -1,4 +1,4 @@
-
+# RHCSA cheat sheet
 Tests:
 Persistence - make everything persistent
 chkconfig everything
@@ -6,10 +6,10 @@ iptables everything
 Restart and test after each task
 
 
-Access a shell prompt and issue commands with correct syntax
+## Access a shell prompt and issue commands with correct syntax
 	- NA
 
-Input Output Redirection
+## Input Output Redirection
 	> overwrite
 	< send into command
 	>> append 
@@ -20,11 +20,11 @@ Input Output Redirection
 	stdout =1
 	stderr =2
 
-Use grep and regular expressions to analyze text
-	grep
+## Use grep and regular expressions to analyze text
+	grep "string" file
 	egrep '(x|y)'
 
-Access remote systems using ssh and VNC
+## Access remote systems using ssh and VNC
 	ssh username@remote server
 	ssh -X (window passthrough, just like on the bastion)
 	vncviewer remote_server
@@ -34,11 +34,13 @@ Access remote systems using ssh and VNC
 	scp 
 	sftp
 
-Log in and switch users in multiuser runlevels
+## Log in and switch users in multiuser runlevels
 	su -
 	su
+	sudo su -
+	sudo -i
 
-Archive, compress, unpack, and uncompress files using tar, star, gzip, and bzip2
+## Archive, compress, unpack, and uncompress files using tar, star, gzip, and bzip2
 	gzip big.jpg
 	bzip2 big.jpg
 	gzip -d big.jpg.gz
@@ -49,11 +51,10 @@ Archive, compress, unpack, and uncompress files using tar, star, gzip, and bzip2
 	star -xattr -H=exustar -c -f=home.star /home/
 	star -x -f=home.star
 
-
-Create and edit text files
+## Create and edit text files
 	vim
 
-Create, delete, copy, and move files and directories
+## Create, delete, copy, and move files and directories
 	mv -r
 	cp
 	rm -rf
@@ -61,18 +62,18 @@ Create, delete, copy, and move files and directories
 	mkdir -p
 	rmdir (remove directory only if empty)
 
-Create hard and soft links
+## Create hard and soft links
 	ln source destination  HARD 
 	ln -s source destination SOFT
 
 
-List, set, and change standard ugo/rwx permissions
+## List, set, and change standard ugo/rwx permissions
 
 	chmod 777
 	chmod g+s
 	chmod g+t
 
-Locate, read, and use system documentation including man, info, and files in /usr/share/doc
+## Locate, read, and use system documentation including man, info, and files in /usr/share/doc
 	man -k [_selinux |command]
 	appropos [command]
 	ls /usr/share/doc | grep [command]
@@ -80,40 +81,40 @@ Locate, read, and use system documentation including man, info, and files in /us
 
 
 
-OPERATE RUNNING SYSTEMS
+# OPERATE RUNNING SYSTEMS
 ========================
-Boot, reboot, and shut down a system normally
+## Boot, reboot, and shut down a system normally
 	boot
 	reboot
 
-Boot systems into different runlevels manually
+## Boot systems into different runlevels manually
 	init x
-Use single-user mode to gain access to a system
+## Use single-user mode to gain access to a system
 	boot, e, 1, b
-Identify CPU/memory intensive processes, adjust process priority with renice, and kill processes
+## Identify CPU/memory intensive processes, adjust process priority with renice, and kill processes
 	top
 	renice
 
-Locate and interpret system log files
+## Locate and interpret system log files
 	/var/log/*
-Access a virtual machine's console
+## Access a virtual machine's console
 	ssh
 
-Start and stop virtual machines
+## Start and stop virtual machines
 	via GUI
 
-Start, stop, and check the status of network services
+## Start, stop, and check the status of network services
 	service x start/stop/restart
 	service network start/stop/restart
 
-List, create, delete, and set partition type for primary, extended, and logical partitions
+## List, create, delete, and set partition type for primary, extended, and logical partitions
 	fdisk -l
 	fdisk /dev/XXX
 		*Remember* 4th partition must ALWAYS be extended
 		82/83 SWAP/8e LVM
 
 
-Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
+## Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
 	pvcreate /dev/XXXX
 	vgcreate VGNAME PVNAME
 	vgextend VGNAME PVNAME
@@ -127,7 +128,7 @@ Create and remove physical volumes, assign physical volumes to volume groups, an
 	mount -r ro /dev/vgname/snapshotlv /snapmount <-- if it needs to be mounted
 
 
-Create and configure LUKS-encrypted partitions and logical volumes to prompt for password and mount a decrypted file system at boot
+## Create and configure LUKS-encrypted partitions and logical volumes to prompt for password and mount a decrypted file system at boot
 	Requires dm_crypt: lsmod grep dm_crypt ; modprobe dm_crypt
 	vim /etc/rc.init
 	yum install cryptsetup-luks
@@ -162,11 +163,11 @@ Create and configure LUKS-encrypted partitions and logical volumes to prompt for
 	mount -a
 
 
-Configure systems to mount file systems at boot by Universally Unique ID (UUID) or label
+## Configure systems to mount file systems at boot by Universally Unique ID (UUID) or label
 	blkid 
 	(NB must be formatted before it will show up)
 
-Add new partitions and logical volumes, and swap to a system non-destructively
+## Add new partitions and logical volumes, and swap to a system non-destructively
 	Unmount the partition or LV to be expanded.
 	Add the new PV, extend the vg
 		vgextend VG PV
@@ -177,21 +178,21 @@ Add new partitions and logical volumes, and swap to a system non-destructively
 		resize2fs lv specifiedsize : e.g. resize2fs /dev/vg1/lv1 2G
 	Remount
 
-Create, mount, unmount, and use ext2, ext3, and ext4 file systems
+## Create, mount, unmount, and use ext2, ext3, and ext4 file systems
 	mkfs.ext[2|3|4] /dev/XXXX (for LVM: /dev/mapper/vg-lv)
 	mkswap
 	mount
 	umount
 
-Mount, unmount, and use LUKS-encrypted file systems
+## Mount, unmount, and use LUKS-encrypted file systems
 	cryptsetup luksOpen /dev/xxx newname
 	mkdir mydata
 	mount /dev/mapper/newname /mydata
 	umount etc.
 
-Mount and unmount CIFS and NFS network file systems
+## Mount and unmount CIFS and NFS network file systems
 
-NFS
+### NFS
 	showmount -e instructor.example.com
 	mkdir /mountpoint
 	mount instructor.example.com:/exported/path /mountpoint
@@ -201,7 +202,7 @@ NFS
 	Persistence:
 	server:/path /mountpoint	nfs	option(defaults)	0 0
 
-CIFS
+### CIFS
 	smbclient (samba-client package MUST be installed)
 	smbclient -L cifsserver.domain
 	mkdir /mountpoint
@@ -211,7 +212,7 @@ CIFS
 	Persistence: vim fstab
 	//win_pc_ip/sharename	/mountpoint	cifs   rw,_netdev,[username etc](defaults)
 
-Automount:
+## Automount:
 	vim /etc/fstab
 	make sure autofs is running
 	find the path in /net and validate
@@ -233,19 +234,19 @@ Automount:
 		* -rw instructor.exaple.com:/home/guests/&
 
 
-Configure systems to mount ext4, LUKS-encrypted, and network file systems automatically
+## Configure systems to mount ext4, LUKS-encrypted, and network file systems automatically
 	Edit fstabs as above
 
-Extend existing unencrypted ext4-formatted logical volumes
+## Extend existing unencrypted ext4-formatted logical volumes
 	lvextend
 	resize2fs
-Create and configure set-GID directories for collaboration
+## Create and configure set-GID directories for collaboration
 	mkdir
 	chown user:group file
 	chmod -R 770
 	chmod -R g+s
 
-Create and manage Access Control Lists (ACLs)
+## Create and manage Access Control Lists (ACLs)
 	Must be configured on the partition
 		vim /etc/fstab
 			defaults,acl
@@ -260,10 +261,10 @@ Create and manage Access Control Lists (ACLs)
 
 		setfacl -m d:u:usrename:rx directory (YOU MUST USE THIS FOR COLLAB DIRECTORIES)
 
-Diagnose and correct file permission problems
+## Diagnose and correct file permission problems
 	tail /var/log/messages
 
-Configure networking and hostname resolution statically or dynamically
+## Configure networking and hostname resolution statically or dynamically
 
 	system-config-network
 
@@ -295,7 +296,7 @@ Configure networking and hostname resolution statically or dynamically
 
 	ifcfg eth* [up|down]
 
-Schedule tasks using cron
+## Schedule tasks using cron
 	man 5 crontab --> this has examples and field information
 	*    *    *    *    *  command to be executed
 	-    -    -    -    -
@@ -307,7 +308,7 @@ Schedule tasks using cron
 	|    +-------------------- hour (0 - 23)
 	+------------------------- min (0 - 59)
 
-Configure systems to boot into a specific runlevel automatically
+## Configure systems to boot into a specific runlevel automatically
 	vim /etc/inittab
 		# Default runlevel. The runlevels used are:
 	   0 - halt (Do NOT set initdefault to this)
@@ -320,24 +321,24 @@ Configure systems to boot into a specific runlevel automatically
 	
 	id:5:initdefault:
 
-Install Red Hat Enterprise Linux automatically using Kickstart
+## Install Red Hat Enterprise Linux automatically using Kickstart
 	Boot from media, hit tab, and amend with ks=filelocation 
 	e.g. ks=http://instructor.example.com/ks.cfg
 	/root/anaconda-ks.cfg
 	system-config-kickstart (needs to be installed)
 
 
-Configure a physical machine to host virtual guests
+## Configure a physical machine to host virtual guests
 	GUI
-Install Red Hat Enterprise Linux systems as virtual guests
+## Install Red Hat Enterprise Linux systems as virtual guests
 	GUI
-Configure systems to launch virtual machines at boot
+## Configure systems to launch virtual machines at boot
 	GUI
-Configure network services to start automatically at boot
+## Configure network services to start automatically at boot
 	onboot in ifcfg
 	chkconfig network on
 
-Configure a system to run a default configuration HTTP server
+## Configure a system to run a default configuration HTTP server
 	yum install httpd
 	service httpd start
 	chkonfig
@@ -349,7 +350,7 @@ Configure a system to run a default configuration HTTP server
 
 
 
-Configure a system to run a default configuration FTP server
+## Configure a system to run a default configuration FTP server
 	yum install vsftpd
 	service vsftpd start
 	chkconfig vsftpd on
@@ -364,7 +365,7 @@ Configure a system to run a default configuration FTP server
 
 
 
-Configure a system to use time services
+## Configure a system to use time services
 	yum install ntpd
 	service ntpd start
 	chkconfig
@@ -373,7 +374,7 @@ Configure a system to use time services
 		iptables -I OUTPUT -p udp --sport 123 -j ACCEPT	
 		SAVE YOUR IPTABLES (iptables-save)
 
-Install and update software packages from Red Hat Network, a remote repository, or from the local file system
+## Install and update software packages from Red Hat Network, a remote repository, or from the local file system
 	yum / rpm
 	vim /etc/yum.repos.d/
 		[name]
@@ -383,7 +384,7 @@ Install and update software packages from Red Hat Network, a remote repository, 
 	(REMEMBER THE TRAILING /)
 
 
-Update the kernel package appropriately to ensure a bootable system
+## Update the kernel package appropriately to ensure a bootable system
 	cat /etc/redhat-release
 	uname -r 
 	yum list installed kernel\*
@@ -393,7 +394,7 @@ Update the kernel package appropriately to ensure a bootable system
 	check:
 		/boot/grub.conf
 
-Kernel Packages	
+## Kernel Packages	
 	/lib/modules/VERSION/
 	lsmod
 	modprobe {modulename}
@@ -401,18 +402,18 @@ Kernel Packages
 	/etc/modprobe.d/local.conf
 	
 
-Modify the system bootloader
+## Modify the system bootloader
 	vim /boot/grub/grub.conf
 
-Create, delete, and modify local user accounts
+## Create, delete, and modify local user accounts
 	useradd
 	usermod
 	userdel
 
-Change passwords and adjust password aging for local user accounts
+## Change passwords and adjust password aging for local user accounts
 	chage
 
-Create, delete, and modify local groups and group memberships
+## Create, delete, and modify local groups and group memberships
 	groupadd
 	groupdel
 	groupmod
@@ -421,33 +422,37 @@ Configure a system to use an existing LDAP directory service for user and group 
 	system-config-authentication
 	dc=example,dc=com
 
-Configure firewall settings using system-config-firewall or iptables
+## Configure firewall settings using system-config-firewall or iptables
 	/etc/sysconfig/iptables
 	iptables -I INPUT -p tcp --dport 22 -j ACCEPT;
 	iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
 
-
-Set enforcing and permissive modes for SELinux
+## SELinux
+### Set enforcing and permissive modes for SELinux
 	getenforce
 	setenforce 1
 	setenforce 0
-	vim
-	/etc/sysconfig/selinux
+	vim /etc/sysconfig/selinux
 
-List and identify SELinux file and process context
-ls -Z
+### List and identify SELinux file and process context
+	ls -Z
 
-Restore default file contexts
-	restorecon
+### Detecting SELinux issues
+	less /var/log/messages 
+	run the suggested sealert command
+	
+### Restore default file contexts
+        semanage fcontext -a -t '/directory(/.*)?'
+	restorecon -Rv /directory
 	man -l xx_selinux, eg. httpd_selinux
 
-Use boolean settings to modify system SELinux settings
+### Use boolean settings to modify system SELinux settings
 	sebool
 	getsebool -a | grep whatever
 	setsebool -P whateverbool on (DO NOT FORGET THE -P PERSISTENT)
 
 
-Diagnose and address routine SELinux policy violations
-	Install: setroubleshoot
-			 selinux-policy
+### Diagnose and address routine SELinux policy violations
+	Install: setroubleshoot 
+	selinux-policy
 
