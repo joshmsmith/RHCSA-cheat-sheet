@@ -1,9 +1,9 @@
 # RHCSA cheat sheet
-Tests:
-Persistence - make everything persistent
-chkconfig everything
-iptables everything
-Restart and test after each task
+	Tests:
+	Persistence - make everything persistent
+	chkconfig everything
+	iptables everything
+	Restart and test after each task
 
 
 ## Access a shell prompt and issue commands with correct syntax
@@ -88,12 +88,22 @@ Restart and test after each task
 	reboot
 
 ## Boot systems into different runlevels manually
-	init x
+	(old) init x
+	systemctl isolate TARGET
+	ls -al /etc/systemd/system/ # to see targets
 ## Use single-user mode to gain access to a system
 	boot, e, 1, b
 ## Identify CPU/memory intensive processes, adjust process priority with renice, and kill processes
 	top
 	renice
+	ps aux | grep [job]
+	pgrep -l -u bob
+	kill -l
+	jobs; kill %1
+
+## Manage System Load
+	lscpu
+	uptime (1, 5, 15 minutes)
 
 ## Locate and interpret system log files
 	/var/log/*
@@ -103,6 +113,10 @@ Restart and test after each task
 ## Start and stop virtual machines
 	via GUI
 
+## Start, stop, and check the status of network services using systemctl
+	systemctl list-units --type=service
+	systemctl status sshd
+	systemctl list-unit-files --type=service # all service units
 ## Start, stop, and check the status of network services
 	service x start/stop/restart
 	service network start/stop/restart
@@ -114,7 +128,7 @@ Restart and test after each task
 		82/83 SWAP/8e LVM
 
 
-## Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
+## OLD? Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
 	pvcreate /dev/XXXX
 	vgcreate VGNAME PVNAME
 	vgextend VGNAME PVNAME
@@ -128,7 +142,7 @@ Restart and test after each task
 	mount -r ro /dev/vgname/snapshotlv /snapmount <-- if it needs to be mounted
 
 
-## Create and configure LUKS-encrypted partitions and logical volumes to prompt for password and mount a decrypted file system at boot
+## OLD? Create and configure LUKS-encrypted partitions and logical volumes to prompt for password and mount a decrypted file system at boot
 	Requires dm_crypt: lsmod grep dm_crypt ; modprobe dm_crypt
 	vim /etc/rc.init
 	yum install cryptsetup-luks
@@ -163,10 +177,26 @@ Restart and test after each task
 	mount -a
 
 
-## Configure systems to mount file systems at boot by Universally Unique ID (UUID) or label
+## Configure systems to mount file systems at boot by UUID or label
 	blkid 
-	(NB must be formatted before it will show up)
+	(New block must be formatted before it will show up)
 
+## edit partitions n stuff
+	parted /dev/vdb mklabel newlable
+	parted /dev/vdb mkpart primary xfs 2048s 1000MB
+	udevadm settle
+	mkfs.xfs
+	vi /etc/fstab
+	systemctl daemon-reload # to reload
+	
+	findmnt --verify # to verify fstab
+## Create, mount, unmount, and use ext2, ext3, and ext4 file systems
+	mkfs.ext[2|3|4] /dev/XXXX (for LVM: /dev/mapper/vg-lv)
+	mkswap
+	swapon
+	mount
+	umount
+	
 ## Add new partitions and logical volumes, and swap to a system non-destructively
 	Unmount the partition or LV to be expanded.
 	Add the new PV, extend the vg
@@ -178,11 +208,12 @@ Restart and test after each task
 		resize2fs lv specifiedsize : e.g. resize2fs /dev/vg1/lv1 2G
 	Remount
 
-## Create, mount, unmount, and use ext2, ext3, and ext4 file systems
-	mkfs.ext[2|3|4] /dev/XXXX (for LVM: /dev/mapper/vg-lv)
-	mkswap
-	mount
-	umount
+## Review mounted filesystems
+	lsof /mnt/usb1 #list open files
+	lsblk
+	lsblk -fp #UUIDs
+	
+
 
 ## Mount, unmount, and use LUKS-encrypted file systems
 	cryptsetup luksOpen /dev/xxx newname
@@ -190,7 +221,7 @@ Restart and test after each task
 	mount /dev/mapper/newname /mydata
 	umount etc.
 
-## Mount and unmount CIFS and NFS network file systems
+## OLD? Mount and unmount CIFS and NFS network file systems
 
 ### NFS
 	showmount -e instructor.example.com
@@ -240,6 +271,7 @@ Restart and test after each task
 ## Extend existing unencrypted ext4-formatted logical volumes
 	lvextend
 	resize2fs
+	
 ## Create and configure set-GID directories for collaboration
 	mkdir
 	chown user:group file
@@ -261,6 +293,21 @@ Restart and test after each task
 
 		setfacl -m d:u:usrename:rx directory (YOU MUST USE THIS FOR COLLAB DIRECTORIES)
 
+## verify a package is installed & daemon running
+	yum list
+	systemctl is-enabled tuned; systemctl is-active tuned
+## yum stuff
+	yum update
+	yum remove PKG
+	yum history
+	yum list PKG
+	yum group list
+	yum search WORDS
+	yum info PKG
+	yum install PKG
+	yum group install PKG
+
+	
 ## Diagnose and correct file permission problems
 	tail /var/log/messages
 
@@ -308,18 +355,14 @@ Restart and test after each task
 	|    +-------------------- hour (0 - 23)
 	+------------------------- min (0 - 59)
 
-## Configure systems to boot into a specific runlevel automatically
-	vim /etc/inittab
-		# Default runlevel. The runlevels used are:
-	   0 - halt (Do NOT set initdefault to this)
-	   1 - Single user mode
-	   2 - Multiuser, without NFS (The same as 3, if you do not have networking)
-	   3 - Full multiuser mode
-	   4 - unused
-	   5 - X11
-	   6 - reboot (Do NOT set initdefault to this)
+# BOOT STUFF
+## Configure systems to boot into a specific target automatically
+	systemctl set-default graphical.target
+	systemctl get-default #to confirm
 	
-	id:5:initdefault:
+## Select a different target at boot time
+	_Append_ systemd.unit=rescue.target to the kernel command line from the boot loader
+	(press e to edit  current entry, append this, ctrl+x to boot with those changes)
 
 ## Install Red Hat Enterprise Linux automatically using Kickstart
 	Boot from media, hit tab, and amend with ks=filelocation 
@@ -327,17 +370,58 @@ Restart and test after each task
 	/root/anaconda-ks.cfg
 	system-config-kickstart (needs to be installed)
 
+## Reset root password  [ref](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/sec-Terminal_Menu_Editing_During_Boot#proc-Resetting_the_Root_Password_Using_rd.break)
+	Reboot, interrupt the boot loader by pressing any key, except enter.
 
-## Configure a physical machine to host virtual guests
-	GUI
-## Install Red Hat Enterprise Linux systems as virtual guests
-	GUI
-## Configure systems to launch virtual machines at boot
-	GUI
+	Move the cursor to the kernel entry to boot (starts with linux)
+
+	'e' to edit the selected entry
+
+	Append rd.break :the system breaks just before the system hands control from the initramfs to the actual system.
+
+	Press Ctrl + x to boot with the changes.
+	(The initramfs switch_root prompt appears.)
+	mount -o remount,rw /sysroot
+	chroot /sysroot
+	passwd
+	touch /.autorelabel
+	exit #chroot	
+	exit
+	
+# troubleshoot boot errors
+	vim /etc/systemd/journald.conf # set Storage=persistent
+	systemctl restart systemd-journald.service # restart the service
+	journalctl -b -1 -p err #show errors since last boot
+	
 ## Configure network services to start automatically at boot
 	onboot in ifcfg
 	chkconfig network on
 
+# network stuff
+## network info
+	ip link
+	ip addr show [interface] # addresses
+	ip -s -h link show [interface] #performance
+	ping
+	ping6
+	ip route
+	ip -6 route
+	tracepath & tracepath6
+	ss -ta #(NETSTAT!)
+## network command line
+	nmcli dev status
+	nmcli con show
+	nmcli con show "connection name"
+	nmcli dev show devname
+	vim /etc/sysconfig/network-scripts/ifcfg-name
+	nmcli con reload
+	nmcli con up "connection name"
+	
+	getent hosts host.name.com #test dns resolution using hosts file
+	host host.name.com #test dns resolution
+	
+	hostnamectl
+# install stuff
 ## Configure a system to run a default configuration HTTP server
 	yum install httpd
 	service httpd start
@@ -382,6 +466,13 @@ Restart and test after each task
 		baseurl=http://instructor.example.com/repo/
 		enabled=1
 	(REMEMBER THE TRAILING /)
+	
+	yum repolist all
+	yum-config-manager --enable reponame
+	
+## yum modules and streams (RHEL8)
+	yum module info modulename:streamnum/profile
+	e.g. yum module info derpydoo:10/common
 
 
 ## Update the kernel package appropriately to ensure a bootable system
@@ -435,11 +526,12 @@ Configure a system to use an existing LDAP directory service for user and group 
 	vim /etc/sysconfig/selinux
 
 ### List and identify SELinux file and process context
-	ls -Z
+	ls -dZ
 
 ### Detecting SELinux issues
 	less /var/log/messages 
 	run the suggested sealert command
+	ausearch -m [type|AVC] -ts recent
 	
 ### Restore default file contexts
         semanage fcontext -a -t '/directory(/.*)?'
