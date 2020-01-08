@@ -107,6 +107,10 @@
 
 ## Locate and interpret system log files
 	/var/log/*
+	
+	systemctl restart rsyslog
+	logger -p user.debug "Debug Message Test"
+	journalctl
 ## Access a virtual machine's console
 	ssh
 
@@ -128,12 +132,22 @@
 		82/83 SWAP/8e LVM
 
 
-## OLD? Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
-	pvcreate /dev/XXXX
-	vgcreate VGNAME PVNAME
+## Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
+	parted -s /dev/vdb mkpart primary 1MiB 769MiB
+	parted -s /dev/vdb mkpart primary 770MiB 1026MiB
+	parted -s /dev/vdb set 1 lvm on
+	parted -s /dev/vdb set 2 lvm on
+	pvcreate /dev/vdb1 /dev/vb2
+	vgcreate VGNAM /dev/vdb1 /dev/vdb2
 	vgextend VGNAME PVNAME
-	lvcreate -n NAME -l %FREE [-L 50G] VGNAME
-	lvextend LVNAME VGNAME
+	lvcreate -n NAME -l[[extants] [-L 50G] VGNAME
+	
+	mkfs -t ext4 /dev/vg01/lv01 # add to fstab and mount -a
+	systemctl daemon-reload
+	
+	pvdisplay
+	vgdisplay
+	lvdisplay
 	lvremove
 	vgremove
 	pvremove
@@ -141,7 +155,56 @@
 	lvcreate -s -n snapshotlv -L `0G /dev/vgname/lvname <-- create a snamshot
 	mount -r ro /dev/vgname/snapshotlv /snapmount <-- if it needs to be mounted
 
+### maintenance on logical volumes
+	lvextend LVNAME VGNAME
+	xfs_growfs /mnt/point (or -r on lvextend to auto-extend)
+	resize2fs /dev/vgname/lvname
+	#swap space has to be swapoff'd ; mkswap'd
+	; and swapon'd
+	
+	pvmove /dev/vdb2 #clean out this pv
+	vgreduce /dev/vg01
+	
+## thin pools with stratis
+	yum install stratisd stratis-cli # le install
+	systemctl enable --now stratisd # le enable
+	stratis pool create stratispool1 /dev/vdb # make new pool
+	stratis pool list # list pool
+	stratis pool add-data stratispool1 /dev/vdc #expand pool
+	stratis pool list # verify expanded pool
+	stratis blockdev list labpool
+	
+	stratis filesystem create stratispool1 stratis-filesystem1 # make dis filesystem
+	stratis filesystem list # list filesystems
+	mkdir /stratisvol # make a mount point
+	mount /stratis/stratispool1/stratis-filesystem1 /stratisvol # mount
+	stratis filesystem snapshot stratispool1 \stratis-filesystem1 stratis-filesystem1-snap # snapshot
+	stratis filesystem list #list the snapshot 
+	
+	stratis filesystem destroy stratispool1 stratis-filesystem1-snap # clean up
 
+## VDO - Virtual Data Optimizer
+	vdo create --name=vdo1 --device=/dev/vdd --vdoLogicalSize=50G
+	vdo list
+	
+	vdo status --name=vdo1 | grep Deduplication
+	vdo status --name=vdo1 | grep Compression
+	
+	mkfs.xfs -K /dev/mapper/vdo1
+	udevadm settle
+	mkdir /mnt/vdo1
+	
+	mount /dev/mapper/vdo1 /mnt/vdo1
+	vdostats --human-readable
+	
+## AUTO MOUNT NFS BABY YEAHHH
+	yum install autofs
+	vim /etc/auto.master.d/demo.autofs
+	  # add dis line to dat file: /shares  /etc/auto.demo
+	vim /etc/auto.demo # this is where the config magic happens
+		# add dis line to dat file: work  -rw,sync  serverb:/shares/work
+		# "work" is the mount point under /shares
+	
 ## OLD? Create and configure LUKS-encrypted partitions and logical volumes to prompt for password and mount a decrypted file system at boot
 	Requires dm_crypt: lsmod grep dm_crypt ; modprobe dm_crypt
 	vim /etc/rc.init
@@ -310,8 +373,32 @@
 	
 ## Diagnose and correct file permission problems
 	tail /var/log/messages
-
-## Configure networking and hostname resolution statically or dynamically
+# network stuff
+## network info
+	ip link
+	ip addr show [interface] # addresses
+	ip -s -h link show [interface] #performance
+	ping
+	ping6
+	ip route
+	ip -6 route
+	tracepath & tracepath6
+	ss -ta #(NETSTAT!)
+## network command line
+	nmcli dev status
+	nmcli con show
+	nmcli con show "connection name"
+	nmcli dev show devname
+	vim /etc/sysconfig/network-scripts/ifcfg-name
+	nmcli con reload
+	nmcli con up "connection name"
+	
+	getent hosts host.name.com #test dns resolution using hosts file
+	host host.name.com #test dns resolution
+	
+	hostnamectl
+	
+## OLD Configure networking and hostname resolution statically or dynamically
 
 	system-config-network
 
@@ -355,6 +442,15 @@
 	|    +-------------------- hour (0 - 23)
 	+------------------------- min (0 - 59)
 
+## systemd schedule stuff
+	Copy /usr/lib/systemd/system/sysstat-collect.timer to /etc/systemd/system/sysstat-collect.timer
+	[Timer]
+	OnCalendar=*:00/02 # 2019-03-* 12:35,37,39:16
+	# OnUnitActiveSec=15min
+	
+## manager temporary files
+	copy /usr/lib/tmpfiles.d/tmp.conf to /etc/tmpfiles.d/tmp.conf
+	
 # BOOT STUFF
 ## Configure systems to boot into a specific target automatically
 	systemctl set-default graphical.target
@@ -393,34 +489,11 @@
 	systemctl restart systemd-journald.service # restart the service
 	journalctl -b -1 -p err #show errors since last boot
 	
-## Configure network services to start automatically at boot
+## OLD Configure network services to start automatically at boot
 	onboot in ifcfg
 	chkconfig network on
 
-# network stuff
-## network info
-	ip link
-	ip addr show [interface] # addresses
-	ip -s -h link show [interface] #performance
-	ping
-	ping6
-	ip route
-	ip -6 route
-	tracepath & tracepath6
-	ss -ta #(NETSTAT!)
-## network command line
-	nmcli dev status
-	nmcli con show
-	nmcli con show "connection name"
-	nmcli dev show devname
-	vim /etc/sysconfig/network-scripts/ifcfg-name
-	nmcli con reload
-	nmcli con up "connection name"
-	
-	getent hosts host.name.com #test dns resolution using hosts file
-	host host.name.com #test dns resolution
-	
-	hostnamectl
+
 # install stuff
 ## Configure a system to run a default configuration HTTP server
 	yum install httpd
@@ -450,13 +523,9 @@
 
 
 ## Configure a system to use time services
-	yum install ntpd
-	service ntpd start
-	chkconfig
-	iptables
-		iptables -I INPUT -p udp --dport 123 -j ACCEPT
-		iptables -I OUTPUT -p udp --sport 123 -j ACCEPT	
-		SAVE YOUR IPTABLES (iptables-save)
+	timedatectl set-ntp true #enables chronyd
+	tzselect
+	sudo timedatectl set-timezone America/Port-au-Prince
 
 ## Install and update software packages from Red Hat Network, a remote repository, or from the local file system
 	yum / rpm
