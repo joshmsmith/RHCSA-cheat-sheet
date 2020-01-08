@@ -1,13 +1,4 @@
 # RHCSA cheat sheet
-	Tests:
-	Persistence - make everything persistent
-	chkconfig everything
-	iptables everything
-	Restart and test after each task
-
-
-## Access a shell prompt and issue commands with correct syntax
-	- NA
 
 ## Input Output Redirection
 	> overwrite
@@ -51,9 +42,6 @@
 	star -xattr -H=exustar -c -f=home.star /home/
 	star -x -f=home.star
 
-## Create and edit text files
-	vim
-
 ## Create, delete, copy, and move files and directories
 	mv -r
 	cp
@@ -78,21 +66,8 @@
 	appropos [command]
 	ls /usr/share/doc | grep [command]
 
-
-
-
 # OPERATE RUNNING SYSTEMS
 ========================
-## Boot, reboot, and shut down a system normally
-	boot
-	reboot
-
-## Boot systems into different runlevels manually
-	(old) init x
-	systemctl isolate TARGET
-	ls -al /etc/systemd/system/ # to see targets
-## Use single-user mode to gain access to a system
-	boot, e, 1, b
 ## Identify CPU/memory intensive processes, adjust process priority with renice, and kill processes
 	top
 	renice
@@ -111,11 +86,6 @@
 	systemctl restart rsyslog
 	logger -p user.debug "Debug Message Test"
 	journalctl
-## Access a virtual machine's console
-	ssh
-
-## Start and stop virtual machines
-	via GUI
 
 ## Start, stop, and check the status of network services using systemctl
 	systemctl list-units --type=service
@@ -130,7 +100,6 @@
 	fdisk /dev/XXX
 		*Remember* 4th partition must ALWAYS be extended
 		82/83 SWAP/8e LVM
-
 
 ## Create and remove physical volumes, assign physical volumes to volume groups, and create and delete logical Volumes
 	parted -s /dev/vdb mkpart primary 1MiB 769MiB
@@ -204,45 +173,14 @@
 	vim /etc/auto.demo # this is where the config magic happens
 		# add dis line to dat file: work  -rw,sync  serverb:/shares/work
 		# "work" is the mount point under /shares
+	sudo systemctl enable --now autofs #starty restarty
 	
-## OLD? Create and configure LUKS-encrypted partitions and logical volumes to prompt for password and mount a decrypted file system at boot
-	Requires dm_crypt: lsmod grep dm_crypt ; modprobe dm_crypt
-	vim /etc/rc.init
-	yum install cryptsetup-luks
-	Create partition
-		fdisk /dev/xx
-	Encrypt partition
-		cryptsetup luksFormat /dev/xx
-	Open it
-		cryptsetup luksOpen /dev/xx /newname
-	Check in /dev/mapper
-		ls /dev/mapper/newname
-	Format it
-		mkfs.ext[3|4] /dev/mapper/newname
-	Add it to crypttab
-		vi /etc/crypttab
-		newname	/dev/xxx (NOTE: PARTITION NOT DEV MAPPER)
-	Create a directory 
-		mkdir /mnt/newname_dir
-	Edit fstab
-		vi /etc/fstab
-		/dev/mapper/newname 	/newname_dir	ext4 	defaults
-	Mount -a
-
-	REMEMBER:
-	You are adding the name you assigned with luksOpen to crypttab and linking it to the encrypted partition.
-	You are adding the same to fstab with a preceeding /dev/mapper and linking it to the mount point in fstab.
-
-	--with UUID--
-	blkid /dev/xx: UUID=xxxx (again, PARTITION)
-	fstab
-		UUID=xxxxx /newname_dir ext4 defaults
-	mount -a
-
-
-## Configure systems to mount file systems at boot by UUID or label
-	blkid 
-	(New block must be formatted before it will show up)
+	# direct maps - in the autofs file:
+	/-  /etc/auto.direct
+	# in the auto.direct file:
+	/mnt/docs  -rw,sync  serverb:/shares/docs
+	#magic wildcard maps
+	*  -rw,sync  serverb:/shares/&
 
 ## edit partitions n stuff
 	parted /dev/vdb mklabel newlable
@@ -253,6 +191,7 @@
 	systemctl daemon-reload # to reload
 	
 	findmnt --verify # to verify fstab
+
 ## Create, mount, unmount, and use ext2, ext3, and ext4 file systems
 	mkfs.ext[2|3|4] /dev/XXXX (for LVM: /dev/mapper/vg-lv)
 	mkswap
@@ -275,61 +214,12 @@
 	lsof /mnt/usb1 #list open files
 	lsblk
 	lsblk -fp #UUIDs
-	
-
 
 ## Mount, unmount, and use LUKS-encrypted file systems
 	cryptsetup luksOpen /dev/xxx newname
 	mkdir mydata
 	mount /dev/mapper/newname /mydata
 	umount etc.
-
-## OLD? Mount and unmount CIFS and NFS network file systems
-
-### NFS
-	showmount -e instructor.example.com
-	mkdir /mountpoint
-	mount instructor.example.com:/exported/path /mountpoint
-	(remember you can browse via /net)
-	OR
-	mount —o rw -t nfs /server:/exported/path  /mountpoint	
-	Persistence:
-	server:/path /mountpoint	nfs	option(defaults)	0 0
-
-### CIFS
-	smbclient (samba-client package MUST be installed)
-	smbclient -L cifsserver.domain
-	mkdir /mountpoint
-
-	mount -t cifs -o [username=|password=|domain=] //cifsserver.domain/sharename /mountpoint
-	It’s default mounted with 777 permissions. Find out more at man 8 mount.cifs
-	Persistence: vim fstab
-	//win_pc_ip/sharename	/mountpoint	cifs   rw,_netdev,[username etc](defaults)
-
-## Automount:
-	vim /etc/fstab
-	make sure autofs is running
-	find the path in /net and validate
-
-	point to specific file:
-		/etc/auto.master
-		/demo	/etc/auto.demo
-
-		/etc/auto.demo
-		public	-ro 	nfsserver.domain:/exported/path
-
-	Restart autofs
-
-	For home directories:
-		/etc/auto.master
-		/home/guests  /etc/auto.ldap
-
-		/etc/auto.ldap
-		* -rw instructor.exaple.com:/home/guests/&
-
-
-## Configure systems to mount ext4, LUKS-encrypted, and network file systems automatically
-	Edit fstabs as above
 
 ## Extend existing unencrypted ext4-formatted logical volumes
 	lvextend
@@ -340,21 +230,6 @@
 	chown user:group file
 	chmod -R 770
 	chmod -R g+s
-
-## Create and manage Access Control Lists (ACLs)
-	Must be configured on the partition
-		vim /etc/fstab
-			defaults,acl
-		mount -o remount /
-
-	getfacl
-	setfacl -m(odify) u:g:o
-		eg setfacl -m u:ruth:rwx file.txt or setfacl -m g:webteam:rwx file.txt
-		setfacle -m u:user rw filename
-		setfacl -x u:user (removes all acls for that user)
-		setfacl -m o::- filename (changes other permissions)
-
-		setfacl -m d:u:usrename:rx directory (YOU MUST USE THIS FOR COLLAB DIRECTORIES)
 
 ## verify a package is installed & daemon running
 	yum list
@@ -373,6 +248,7 @@
 	
 ## Diagnose and correct file permission problems
 	tail /var/log/messages
+
 # network stuff
 ## network info
 	ip link
@@ -397,38 +273,6 @@
 	host host.name.com #test dns resolution
 	
 	hostnamectl
-	
-## OLD Configure networking and hostname resolution statically or dynamically
-
-	system-config-network
-
-	service networking [start|stop|restart]
-
-	/etc/sysconfig/network {contains hostname}
-	hostname [hostnamedesired]
-
-	/etc/nsswitch.conf {resolution order}
-	/etc/hosts {static hosts}
-		127.0.0.1  localhost.localdomain localhost
-	/etc/resolv.conf {DNS servers to query}	
-
-	/etc/sysconfig/network-scripts/ifcfg-eth* {eth config file}
-
-		IPADDR=xxx.xxx.xxx.xxx
-		NM_CONTROLLED=no
-		BOOTPROTO=[dhcp|static]
-		
-	/etc/init.d/networkmanager stop
-	chkconfig /etc/init.d/networkmanager off
-
-	Set a secondary IP
-	Add an eth0:0 file with just the above.
-
-	If needed:
-	Gateway=host.machine.ip
-	Netmask=255.255.255.0
-
-	ifcfg eth* [up|down]
 
 ## Schedule tasks using cron
 	man 5 crontab --> this has examples and field information
@@ -448,7 +292,7 @@
 	OnCalendar=*:00/02 # 2019-03-* 12:35,37,39:16
 	# OnUnitActiveSec=15min
 	
-## manager temporary files
+## manage temporary files
 	copy /usr/lib/tmpfiles.d/tmp.conf to /etc/tmpfiles.d/tmp.conf
 	
 # BOOT STUFF
@@ -489,11 +333,6 @@
 	systemctl restart systemd-journald.service # restart the service
 	journalctl -b -1 -p err #show errors since last boot
 	
-## OLD Configure network services to start automatically at boot
-	onboot in ifcfg
-	chkconfig network on
-
-
 # install stuff
 ## Configure a system to run a default configuration HTTP server
 	yum install httpd
@@ -504,23 +343,6 @@
 
 	iptables-save      ********ALWAYS SAVE YOUR IPTABLES********
 	vim /etc/httpd/conf/httpd.conf
-
-
-
-## Configure a system to run a default configuration FTP server
-	yum install vsftpd
-	service vsftpd start
-	chkconfig vsftpd on
-
-	vim /etc/sysconfig/iptables
-		iptables -I INPUT 5 -p tcp -m tcp --dport 20 -j ACCEPT
-		iptables -I INPUT 5 -p tcp -m tcp --dport 21 -j ACCEPT
-	iptables save
-
-	man -k _selinux .. man ftpd_selinux
-	semanage and restorecon	
-
-
 
 ## Configure a system to use time services
 	timedatectl set-ntp true #enables chronyd
@@ -542,25 +364,6 @@
 ## yum modules and streams (RHEL8)
 	yum module info modulename:streamnum/profile
 	e.g. yum module info derpydoo:10/common
-
-
-## Update the kernel package appropriately to ensure a bootable system
-	cat /etc/redhat-release
-	uname -r 
-	yum list installed kernel\*
-	uname -m (architecture)
-
-	yum update kernel
-	check:
-		/boot/grub.conf
-
-## Kernel Packages	
-	/lib/modules/VERSION/
-	lsmod
-	modprobe {modulename}
-	modinfo (shows parameters that module supports)
-	/etc/modprobe.d/local.conf
-	
 
 ## Modify the system bootloader
 	vim /boot/grub/grub.conf
