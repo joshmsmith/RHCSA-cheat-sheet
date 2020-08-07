@@ -360,6 +360,7 @@
 	
 	yum repolist all
 	yum-config-manager --enable reponame
+	yum-config-manager --add-repo="http://repo.com/repo"
 	
 ## yum modules and streams (RHEL8)
 	yum module info modulename:streamnum/profile
