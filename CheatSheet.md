@@ -272,7 +272,7 @@
 	getent hosts host.name.com #test dns resolution using hosts file
 	host host.name.com #test dns resolution
 	
-	hostnamectl
+	sudo hostnamectl set-hostname myhost.nydom.com
 
 ## Schedule tasks using cron
 	man 5 crontab --> this has examples and field information
