@@ -230,6 +230,8 @@
 	chown user:group file
 	chmod -R 770
 	chmod -R g+s
+	
+	setfacl -m u:user_to_block:000
 
 ## verify a package is installed & daemon running
 	yum list
