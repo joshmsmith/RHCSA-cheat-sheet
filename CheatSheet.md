@@ -247,6 +247,9 @@
 	yum install PKG
 	yum group install PKG
 
+# add a repo
+	yum-config-manager --add-repo="http://node.dom.com"
+	gpgcheck=false
 	
 ## Diagnose and correct file permission problems
 	tail /var/log/messages
