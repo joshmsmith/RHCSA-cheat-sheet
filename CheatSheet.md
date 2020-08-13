@@ -408,6 +408,7 @@ Configure a system to use an existing LDAP directory service for user and group 
 	run the suggested sealert command
 	ausearch -m [type|AVC] -ts recent
 	
+	semanage port -a -t http_port_t -p tcp 8001  # -a add -t type -p port
 ### Restore default file contexts
         semanage fcontext -a -t '/directory(/.*)?'
 	restorecon -Rv /directory
